@@ -1,0 +1,28 @@
+# Linux utility.
+.cache/
+test.sh
+heaptrack*
+gencc.sh
+compile_commands.json
+.clangd
+build.sh
+
+# Some build system.
+Makefile 
+*.sln
+*.vcxproj
+*.filters
+*.user
+
+# Visual studio
+.vs/
+
+# Utils.
+.clang-format
+
+# Binary.
+bin/
+bin-int/
+
+# Allow premake binary.
+!vendor/bin/
