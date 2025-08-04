@@ -19,6 +19,7 @@ Makefile
 
 # Utils.
 .clang-format
+dev_notes.txt
 
 # Binary.
 bin/

@@ -61,6 +61,8 @@ typedef double f64;
         DBG_BREAK();            \
     }
 
+#define DEBUG_OP(x) x
+
 #else
 #define DBG_BREAK()
 
@@ -70,4 +72,6 @@ typedef double f64;
 
 #define ASSERT(x)
 #define ASSERT_MSG(x, ...)
+
+#define DEBUG_OP(x)
 #endif // D_DEBUG

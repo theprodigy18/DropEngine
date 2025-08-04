@@ -16,6 +16,11 @@ bool API_SwapBuffers(GfxHandle handle)
     return Graphics_SwapBuffers(handle);
 }
 
+bool API_MakeCurrent(GfxHandle handle)
+{
+	return Graphics_MakeCurrent(handle);
+}
+
 void API_ClearColor(f32 r, f32 g, f32 b, f32 a)
 {
     Graphics_ClearColor(r, g, b, a);

@@ -145,6 +145,8 @@ static i32  s_gfxCount      = 0;
 
 bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
 {
+	*pHandle = NULL;
+
 	if (!s_isInitialized)
 	{
         WndInitProps dummyProps;
@@ -325,6 +327,11 @@ void Graphics_DestroyGraphics(GfxHandle* pHandle)
 bool Graphics_SwapBuffers(GfxHandle handle)
 {
 	return SwapBuffers(handle->hdc);
+}
+
+bool Graphics_MakeCurrent(GfxHandle handle)
+{
+	return wglMakeCurrent(handle->hdc, handle->context);
 }
 
 void Graphics_ClearColor(f32 r, f32 g, f32 b, f32 a)

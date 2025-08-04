@@ -10,6 +10,8 @@ DLL_API void API_DestroyGraphics(GfxHandle* pHandle);
 
 DLL_API bool API_SwapBuffers(GfxHandle handle);
 
+DLL_API bool API_MakeCurrent(GfxHandle handle);
+
 DLL_API void API_ClearColor(f32 r, f32 g, f32 b, f32 a);
 
 DLL_API void API_ClearDepth(f32 depth);

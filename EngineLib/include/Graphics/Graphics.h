@@ -13,6 +13,9 @@ void Graphics_DestroyGraphics(GfxHandle* pHandle);
 // Swap backbuffer to frontbuffer.
 bool Graphics_SwapBuffers(GfxHandle handle);
 
+// Make this Graphics handle current.
+bool Graphics_MakeCurrent(GfxHandle handle);
+
 // Clear rendering surface with given color.
 void Graphics_ClearColor(f32 r, f32 g, f32 b, f32 a);
 

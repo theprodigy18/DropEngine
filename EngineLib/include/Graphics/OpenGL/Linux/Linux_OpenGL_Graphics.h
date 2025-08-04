@@ -8,7 +8,6 @@
 
 #include <GL/gl.h>
 
-
 typedef struct _GfxHandle
 {
     EGLSurface surface;

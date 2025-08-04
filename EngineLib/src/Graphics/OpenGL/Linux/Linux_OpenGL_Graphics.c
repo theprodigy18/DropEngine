@@ -331,6 +331,11 @@ bool Graphics_SwapBuffers(GfxHandle handle)
     return eglSwapBuffers(s_eglDisplay, handle->surface);
 }
 
+bool Graphics_MakeCurrent(GfxHandle handle)
+{
+    return eglMakeCurrent(s_eglDisplay, handle->surface, handle->surface, handle->context);
+}
+
 void Graphics_ClearColor(f32 r, f32 g, f32 b, f32 a)
 {
     glClearColor(r, g, b, a);
