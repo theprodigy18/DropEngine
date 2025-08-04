@@ -12,12 +12,9 @@ bool Platform_CreateWindow(WndHandle* pHandle, const WndInitProps* pProps)
 {
     *pHandle = NULL;
 
-    bool result = false;
-
     if (!s_isInitialized)
     {
-        result = XInitThreads();
-        if (!result)
+        if (!XInitThreads())
         {
             ASSERT_MSG(false, "Failed to initialize X11 Threads.");
             return false;
@@ -56,16 +53,14 @@ bool Platform_CreateWindow(WndHandle* pHandle, const WndInitProps* pProps)
         return false;
     }
 
-    result = XStoreName(s_pDisplay, window, pProps->title);
-    if (!result)
+    if (!XStoreName(s_pDisplay, window, pProps->title))
     {
         ASSERT_MSG(false, "Failed to store the X Window Title.");
         XDestroyWindow(s_pDisplay, window);
         return false;
     }
 
-    result = XSetWMProtocols(s_pDisplay, window, &s_wmDelete, 1);
-    if (!result)
+    if (!XSetWMProtocols(s_pDisplay, window, &s_wmDelete, 1))
     {
         ASSERT_MSG(false, "Failed to Attach Delete Protocol on X Window.");
         XDestroyWindow(s_pDisplay, window);
@@ -75,6 +70,7 @@ bool Platform_CreateWindow(WndHandle* pHandle, const WndInitProps* pProps)
     XSync(s_pDisplay, False);
 
     WndHandle handle = ALLOC_SINGLE(_WndHandle);
+    ASSERT(handle);
     handle->pDisplay = s_pDisplay;
     handle->window   = window;
     *pHandle         = handle;
@@ -104,6 +100,9 @@ void Platform_DestroyWindow(WndHandle* pHandle)
     if (s_wndCount == 0)
     {
         XCloseDisplay(s_pDisplay);
+        s_pDisplay      = NULL;
+        s_wmDelete      = 0;
+        s_isInitialized = false;
     }
 }
 

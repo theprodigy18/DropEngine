@@ -43,7 +43,7 @@ bool Platform_CreateWindow(WndHandle* pHandle, const WndInitProps* pProps)
         }
 
         WNDCLASSEXW wcex;
-		ZeroMemory(&wcex, sizeof(wcex));
+        ZeroMemory(&wcex, sizeof(wcex));
         wcex.cbSize        = sizeof(wcex);
         wcex.style         = CS_OWNDC;
         wcex.hInstance     = s_hInstance;
@@ -62,7 +62,7 @@ bool Platform_CreateWindow(WndHandle* pHandle, const WndInitProps* pProps)
             return false;
         }
 
-		SetProcessDPIAware();
+        SetProcessDPIAware();
 
         s_isInitialized = true;
     }
@@ -79,7 +79,7 @@ bool Platform_CreateWindow(WndHandle* pHandle, const WndInitProps* pProps)
                                 dwStyle,
                                 CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top,
                                 NULL, NULL, s_hInstance, NULL);
-	FREE(title);
+    FREE(title);
 
     if (!hwnd)
     {
@@ -118,6 +118,7 @@ void Platform_DestroyWindow(WndHandle* pHandle)
     if (s_wndCount == 0)
     {
         UnregisterClassW(L"DropEngine", s_hInstance);
+		s_hInstance = NULL;
         s_isInitialized = false;
     }
 }
