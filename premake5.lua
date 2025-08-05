@@ -109,15 +109,15 @@ includedirs
 }
 
 filter "system:linux"
-files 
+files
 {
-	"%{prj.name}/include/Platform/Linux/*.h",
-	"%{prj.name}/src/Platform/Linux/*.c"
+    "%{prj.name}/include/Platform/Linux/*.h",
+    "%{prj.name}/src/Platform/Linux/*.c"
 }
 pic "on"
 
-filter "system:windows" 
-files 
+filter "system:windows"
+files
 {
     "%{prj.name}/include/Platform/Windows/*.h",
     "%{prj.name}/src/Platform/Windows/*.c"
@@ -129,6 +129,13 @@ files
 {
     "%{prj.name}/include/Graphics/OpenGL/Linux/*.h",
     "%{prj.name}/src/Graphics/OpenGL/Linux/*.c"
+}
+
+filter { "system:linux", "options:use_vulkan" }
+files
+{
+    "%{prj.name}/include/Graphics/Vulkan/Linux/*.h",
+    "%{prj.name}/src/Graphics/Vulkan/Linux/*.c"
 }
 
 filter { "system:windows", "options:use_opengl" }
@@ -182,11 +189,14 @@ defines "DLL_EXPORTS"
 filter "system:linux"
 links { "X11" }
 
+filter "system:windows"
+links { "user32", "gdi32" }
+
 filter { "system:linux", "options:use_opengl" }
 links { "EGL", "GL" }
 
-filter "system:windows"
-links { "user32", "gdi32" }
+filter { "system:linux", "options:use_vulkan" }
+links { "vulkan" }
 
 filter { "system:windows", "options:use_opengl" }
 links { "opengl32" }
