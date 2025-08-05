@@ -153,6 +153,17 @@ files
     "%{prj.name}/src/Graphics/DirectX11/Windows/*.c"
 }
 
+filter { "system:windows", "options:use_vulkan" }
+files
+{
+    "%{prj.name}/include/Graphics/Vulkan/Windows/*.h",
+    "%{prj.name}/src/Graphics/Vulkan/Windows/*.c"
+}
+includedirs
+{
+    "$(VULKAN_SDK)/Include" -- ENV VULKAN_SDK.
+}
+
 filter {}
 
 -- =========================================
@@ -203,6 +214,10 @@ links { "opengl32" }
 
 filter { "system:windows", "options:use_directx11" }
 links { "d3d11", "dxgi", "dxguid" }
+
+filter { "system:windows", "options:use_vulkan" }
+links { "vulkan-1" }
+libdirs { "$(VULKAN_SDK)/Lib" } -- ENV VULKAN_SDK.
 
 filter {}
 
