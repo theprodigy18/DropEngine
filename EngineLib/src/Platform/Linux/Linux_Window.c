@@ -82,15 +82,19 @@ bool Platform_CreateWindow(WndHandle* pHandle, const WndInitProps* pProps)
 
 void Platform_DestroyWindow(WndHandle* pHandle)
 {
-    ASSERT_MSG(pHandle, "pHandle is NULL.");
+    ASSERT_MSG(pHandle && *pHandle, "Handle is NULL.");
     WndHandle handle = *pHandle;
-    ASSERT_MSG(handle, "Handle is NULL.");
 
     if (handle)
     {
         XDestroyWindow(s_pDisplay, handle->window);
         XSync(s_pDisplay, False);
+
+        handle->window   = 0;
+        handle->pDisplay = NULL;
+
         FREE(handle);
+        handle = NULL;
 
         --s_wndCount;
     }

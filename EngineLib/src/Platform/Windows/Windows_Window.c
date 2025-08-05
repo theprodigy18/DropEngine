@@ -100,15 +100,19 @@ bool Platform_CreateWindow(WndHandle* pHandle, const WndInitProps* pProps)
 
 void Platform_DestroyWindow(WndHandle* pHandle)
 {
-    ASSERT_MSG(pHandle, "pHandle is NULL.");
+    ASSERT_MSG(pHandle && *pHandle, "Handle is NULL.");
     WndHandle handle = *pHandle;
-    ASSERT_MSG(handle, "Handle is NULL.");
 
     if (handle)
     {
         ReleaseDC(handle->hwnd, handle->hdc);
         DestroyWindow(handle->hwnd);
+
+		handle->hwnd = NULL;
+		handle->hdc  = NULL;
+
         FREE(handle);
+		handle = NULL;
 
         --s_wndCount;
     }

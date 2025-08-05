@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "Graphics/OpenGL/Linux/Linux_OpenGL_Graphics.h"
 
+#include <string.h>
+
 #pragma region INTERNAL
 #pragma region GLFunctionProcs
 #define LoadGLFunction(type, name)          \
@@ -133,6 +135,7 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
 
     if (!s_isInitialized)
     {
+
         s_eglDisplay = eglGetDisplay((EGLNativeDisplayType) pProps->wndHandle->pDisplay);
         if (!s_eglDisplay)
         {
@@ -142,6 +145,13 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
         if (!eglInitialize(s_eglDisplay, NULL, NULL))
         {
             ASSERT_MSG(false, "Failed to initialize EGL.");
+            return false;
+        }
+
+        const char* ext = eglQueryString(s_eglDisplay, EGL_EXTENSIONS);
+        if (!ext || !strstr(ext, "EGL_KHR_gl_colorspace"))
+        {
+            ASSERT_MSG(false, "EGL_KHR_gl_colorspace not supported.");
             return false;
         }
 
@@ -255,7 +265,11 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
         return false;
     }
 
-    EGLSurface surface = eglCreateWindowSurface(s_eglDisplay, config, wndHandle->window, NULL);
+    const EGLint surfaceAttribs[] = {
+        EGL_GL_COLORSPACE_KHR, EGL_GL_COLORSPACE_SRGB_KHR,
+        EGL_NONE};
+
+    EGLSurface surface = eglCreateWindowSurface(s_eglDisplay, config, wndHandle->window, surfaceAttribs);
     if (surface == EGL_NO_SURFACE)
     {
         ASSERT_MSG(false, "Failed to created EGL Surface.");
@@ -294,6 +308,7 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
     XWindowAttributes wAttribs;
     XGetWindowAttributes(wndHandle->pDisplay, wndHandle->window, &wAttribs);
     glViewport(0, 0, wAttribs.width, wAttribs.height);
+    glEnable(GL_FRAMEBUFFER_SRGB);
 
     ++s_gfxCount;
 
@@ -302,16 +317,20 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
 
 void Graphics_DestroyGraphics(GfxHandle* pHandle)
 {
-    ASSERT_MSG(pHandle, "pHandle is NULL.");
+    ASSERT_MSG(pHandle && *pHandle, "Handle is NULL.");
     GfxHandle handle = *pHandle;
-    ASSERT_MSG(handle, "Handle is NULL.");
 
     if (handle)
     {
         eglMakeCurrent(s_eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
         eglDestroyContext(s_eglDisplay, handle->context);
         eglDestroySurface(s_eglDisplay, handle->surface);
+
+		handle->surface = NULL;
+		handle->context = NULL;
+
         FREE(handle);
+		handle = NULL;
 
         --s_gfxCount;
     }

@@ -3,6 +3,13 @@
 
 #define QUEUE_LIMIT 32
 
+#define VK_SAFE_DESTROY(fn, device, handle) \
+    if ((handle) != VK_NULL_HANDLE)         \
+    {                                       \
+        fn(device, handle, NULL);           \
+        handle = VK_NULL_HANDLE;            \
+    }
+
 #pragma region INTERNAL
 PFN_vkCreateXlibSurfaceKHR pfn_vkCreateXlibSurfaceKHR = NULL;
 
@@ -252,7 +259,7 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
     VkSurfaceFormatKHR choosenFormat = surfaceFormats[0];
     for (u32 i = 0; i < formatCount; ++i)
     {
-        if (surfaceFormats[i].format == VK_FORMAT_B8G8R8A8_UNORM)
+        if (surfaceFormats[i].format == VK_FORMAT_B8G8R8A8_SRGB)
         {
             choosenFormat = surfaceFormats[i];
             break;
@@ -336,6 +343,8 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
         if (result != VK_SUCCESS)
         {
             ASSERT_MSG(false, "Failed to create image view");
+            for (u32 j = 0; j < i; ++j)
+                vkDestroyImageView(device, swapchainImageViews[j], NULL);
             vkDestroySwapchainKHR(device, swapchain, NULL);
             vkDestroyDevice(device, NULL);
             vkDestroySurfaceKHR(instance, surface, NULL);
@@ -390,7 +399,6 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
             ASSERT_MSG(false, "Failed to create depth image.");
             for (u32 i = 0; i < swapchainImageCount; ++i)
                 vkDestroyImageView(device, swapchainImageViews[i], NULL);
-
             vkDestroySwapchainKHR(device, swapchain, NULL);
             vkDestroyDevice(device, NULL);
             vkDestroySurfaceKHR(instance, surface, NULL);
@@ -514,6 +522,11 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
     if (result != VK_SUCCESS)
     {
         ASSERT_MSG(false, "Failed to create command pool");
+        vkDestroyImageView(device, depthImageView, NULL);
+        vkFreeMemory(device, depthImageMemory, NULL);
+        vkDestroyImage(device, depthImage, NULL);
+        for (u32 i = 0; i < swapchainImageCount; ++i)
+            vkDestroyImageView(device, swapchainImageViews[i], NULL);
         vkDestroySwapchainKHR(device, swapchain, NULL);
         vkDestroyDevice(device, NULL);
         vkDestroySurfaceKHR(instance, surface, NULL);
@@ -534,6 +547,11 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
     {
         ASSERT_MSG(false, "Failed to allocate command buffer");
         vkDestroyCommandPool(device, commandPool, NULL);
+        vkDestroyImageView(device, depthImageView, NULL);
+        vkFreeMemory(device, depthImageMemory, NULL);
+        vkDestroyImage(device, depthImage, NULL);
+        for (u32 i = 0; i < swapchainImageCount; ++i)
+            vkDestroyImageView(device, swapchainImageViews[i], NULL);
         vkDestroySwapchainKHR(device, swapchain, NULL);
         vkDestroyDevice(device, NULL);
         vkDestroySurfaceKHR(instance, surface, NULL);
@@ -558,6 +576,11 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
     {
         ASSERT_MSG(false, "Failed to create image available semaphore");
         vkDestroyCommandPool(device, commandPool, NULL);
+        vkDestroyImageView(device, depthImageView, NULL);
+        vkFreeMemory(device, depthImageMemory, NULL);
+        vkDestroyImage(device, depthImage, NULL);
+        for (u32 i = 0; i < swapchainImageCount; ++i)
+            vkDestroyImageView(device, swapchainImageViews[i], NULL);
         vkDestroySwapchainKHR(device, swapchain, NULL);
         vkDestroyDevice(device, NULL);
         vkDestroySurfaceKHR(instance, surface, NULL);
@@ -571,6 +594,11 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
         ASSERT_MSG(false, "Failed to create render finished semaphore");
         vkDestroySemaphore(device, imageAvailableSemaphore, NULL);
         vkDestroyCommandPool(device, commandPool, NULL);
+        vkDestroyImageView(device, depthImageView, NULL);
+        vkFreeMemory(device, depthImageMemory, NULL);
+        vkDestroyImage(device, depthImage, NULL);
+        for (u32 i = 0; i < swapchainImageCount; ++i)
+            vkDestroyImageView(device, swapchainImageViews[i], NULL);
         vkDestroySwapchainKHR(device, swapchain, NULL);
         vkDestroyDevice(device, NULL);
         vkDestroySurfaceKHR(instance, surface, NULL);
@@ -585,6 +613,11 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
         vkDestroySemaphore(device, renderFinishedSemaphore, NULL);
         vkDestroySemaphore(device, imageAvailableSemaphore, NULL);
         vkDestroyCommandPool(device, commandPool, NULL);
+        vkDestroyImageView(device, depthImageView, NULL);
+        vkFreeMemory(device, depthImageMemory, NULL);
+        vkDestroyImage(device, depthImage, NULL);
+        for (u32 i = 0; i < swapchainImageCount; ++i)
+            vkDestroyImageView(device, swapchainImageViews[i], NULL);
         vkDestroySwapchainKHR(device, swapchain, NULL);
         vkDestroyDevice(device, NULL);
         vkDestroySurfaceKHR(instance, surface, NULL);
@@ -658,48 +691,59 @@ void Graphics_DestroyGraphics(GfxHandle* pHandle)
         vkDeviceWaitIdle(handle->device);
 
         // 2. Destroy sync objects.
-        vkDestroySemaphore(handle->device, handle->renderFinishedSemaphore, NULL);
-        vkDestroySemaphore(handle->device, handle->imageAvailableSemaphore, NULL);
-        vkDestroyFence(handle->device, handle->inFlightFence, NULL);
+        VK_SAFE_DESTROY(vkDestroySemaphore, handle->device, handle->renderFinishedSemaphore);
+        VK_SAFE_DESTROY(vkDestroySemaphore, handle->device, handle->imageAvailableSemaphore);
+        VK_SAFE_DESTROY(vkDestroyFence, handle->device, handle->inFlightFence);
 
         // 3. Destroy command objects.
-        vkDestroyCommandPool(handle->device, handle->commandPool, NULL);
+        vkFreeCommandBuffers(handle->device, handle->commandPool, 1, &handle->commandBuffer);
+        VK_SAFE_DESTROY(vkDestroyCommandPool, handle->device, handle->commandPool);
 
         // 4. Destroy image views.
         for (u32 i = 0; i < handle->swapchainImageCount; ++i)
         {
-            vkDestroyImageView(handle->device, handle->swapchainImageViews[i], NULL);
+            VK_SAFE_DESTROY(vkDestroyImageView, handle->device, handle->swapchainImageViews[i]);
         }
 
         // 5. Free arrays.
         FREE(handle->swapchainImageViews);
         FREE(handle->swapchainImages);
+        handle->swapchainImageViews = NULL;
+        handle->swapchainImages     = NULL;
 
         // 5.5 Destroy depth buffer.
-        vkDestroyImageView(handle->device, handle->depthImageView, NULL);
-        vkDestroyImage(handle->device, handle->depthImage, NULL);
-        vkFreeMemory(handle->device, handle->depthImageMemory, NULL);
+        VK_SAFE_DESTROY(vkDestroyImageView, handle->device, handle->depthImageView);
+        VK_SAFE_DESTROY(vkDestroyImage, handle->device, handle->depthImage);
+        VK_SAFE_DESTROY(vkFreeMemory, handle->device, handle->depthImageMemory);
 
         // 6. Destroy swapchain.
-        vkDestroySwapchainKHR(handle->device, handle->swapchain, NULL);
+        VK_SAFE_DESTROY(vkDestroySwapchainKHR, handle->device, handle->swapchain);
 
         // 7. Destroy device.
-        vkDestroyDevice(handle->device, NULL);
+        if (handle->device != VK_NULL_HANDLE)
+        {
+            vkDestroyDevice(handle->device, NULL);
+            handle->device = VK_NULL_HANDLE;
+        }
 
         // 8. Destroy surface.
-        vkDestroySurfaceKHR(handle->instance, handle->surface, NULL);
+        VK_SAFE_DESTROY(vkDestroySurfaceKHR, handle->instance, handle->surface);
 
         // 9. Destroy instance.
-        vkDestroyInstance(handle->instance, NULL);
+        if (handle->instance != VK_NULL_HANDLE)
+        {
+            vkDestroyInstance(handle->instance, NULL);
+            handle->instance = VK_NULL_HANDLE;
+        }
 
         // 10. Free handle.
+        if (s_currentHandle == handle)
+            s_currentHandle = NULL;
         FREE(handle);
+        handle = NULL;
     }
 
     *pHandle = NULL;
-
-    if (s_currentHandle == handle)
-        s_currentHandle = NULL;
 }
 
 bool Graphics_MakeCurrent(GfxHandle handle)

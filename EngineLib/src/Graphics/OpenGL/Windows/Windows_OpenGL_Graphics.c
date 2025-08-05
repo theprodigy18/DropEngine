@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "Graphics/OpenGL/Windows/Windows_OpenGL_Graphics.h"
 
+#include <string.h>
+
 #pragma region INTERNAL
 static HMODULE g_openglDLL = NULL;
 
@@ -122,6 +124,7 @@ void LoadOpenGLFunctions()
 
 PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = NULL;
 PFNWGLCHOOSEPIXELFORMATARBPROC    wglChoosePixelFormatARB    = NULL;
+PFNWGLGETEXTENSIONSSTRINGARBPROC  wglGetExtensionsStringARB  = NULL;
 
 void CALLBACK GLDebugCallback(GLenum source, GLenum type, GLuint id,
                               GLenum severity, GLsizei length, const GLchar* message,
@@ -205,9 +208,19 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
 
 		LOAD_GL_FUNCTION(PFNWGLCREATECONTEXTATTRIBSARBPROC, wglCreateContextAttribsARB);
 		LOAD_GL_FUNCTION(PFNWGLCHOOSEPIXELFORMATARBPROC,    wglChoosePixelFormatARB);
-		if (!wglCreateContextAttribsARB || !wglChoosePixelFormatARB)
+		LOAD_GL_FUNCTION(PFNWGLGETEXTENSIONSSTRINGARBPROC,  wglGetExtensionsStringARB);
+		if (!wglCreateContextAttribsARB || !wglChoosePixelFormatARB || !wglGetExtensionsStringARB)
 		{
 			ASSERT(false);
+			wglDeleteContext(dummyContext);
+			Platform_DestroyWindow(&dummyWndHandle);
+			return false;
+		}
+
+		const char* wglExt = wglGetExtensionsStringARB(dummyWndHandle->hdc);
+		if (!wglExt || !strstr(wglExt, "WGL_ARB_framebuffer_sRGB"))
+		{
+			ASSERT_MSG(false, "WGL_ARB_framebuffer_sRGB is not supported.");
 			wglDeleteContext(dummyContext);
 			Platform_DestroyWindow(&dummyWndHandle);
 			return false;
@@ -236,8 +249,13 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
         WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB,
         WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB,
         WGL_COLOR_BITS_ARB, 32,
-        WGL_DEPTH_BITS_ARB, 24,
+		WGL_RED_BITS_ARB, 8,
+		WGL_GREEN_BITS_ARB, 8,
+		WGL_BLUE_BITS_ARB, 8,
         WGL_ALPHA_BITS_ARB, 8,
+        WGL_DEPTH_BITS_ARB, 24,
+		WGL_STENCIL_BITS_ARB, 8,
+		WGL_FRAMEBUFFER_SRGB_CAPABLE_ARB, GL_TRUE,
         0}; // Last entry must be 0 to terminate the list.
 
     u32 numPixelFormats = 0;
@@ -293,7 +311,7 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
     GetClientRect(wndHandle->hwnd, &rc);
 
     glViewport(0, 0, rc.right - rc.left, rc.bottom - rc.top);
-
+	glEnable(GL_FRAMEBUFFER_SRGB);
 
 	++s_gfxCount;
 
@@ -302,15 +320,20 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
 
 void Graphics_DestroyGraphics(GfxHandle* pHandle)
 {
-    ASSERT_MSG(pHandle, "pHandle is NULL.");
+    ASSERT_MSG(pHandle && *pHandle, "Handle is NULL.");
 	GfxHandle handle = *pHandle;
-	ASSERT_MSG(handle, "handle is NULL.");
 
 	if (handle)
 	{
 		wglMakeCurrent(NULL, NULL);
 		wglDeleteContext(handle->context);
+
+		handle->context = NULL;
+		handle->hdc     = NULL;
+		
 		FREE(handle);
+		handle = NULL;
+
 		--s_gfxCount;
 	}
 

@@ -14,10 +14,10 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
 
     DXGI_SWAP_CHAIN_DESC swapChainDesc;
     ZeroMemory(&swapChainDesc, sizeof(DXGI_SWAP_CHAIN_DESC));
-    swapChainDesc.BufferCount                        = 1;
+    swapChainDesc.BufferCount                        = 2;
     swapChainDesc.BufferDesc.Width                   = 0;
     swapChainDesc.BufferDesc.Height                  = 0;
-    swapChainDesc.BufferDesc.Format                  = DXGI_FORMAT_R8G8B8A8_UNORM;
+    swapChainDesc.BufferDesc.Format                  = DXGI_FORMAT_B8G8R8A8_UNORM;
     swapChainDesc.BufferDesc.RefreshRate.Numerator   = 60;
     swapChainDesc.BufferDesc.RefreshRate.Denominator = 1;
     swapChainDesc.BufferUsage                        = DXGI_USAGE_RENDER_TARGET_OUTPUT;
@@ -25,7 +25,7 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
     swapChainDesc.SampleDesc.Count                   = 1;
     swapChainDesc.SampleDesc.Quality                 = 0;
     swapChainDesc.Windowed                           = TRUE;
-    swapChainDesc.SwapEffect                         = DXGI_SWAP_EFFECT_DISCARD;
+    swapChainDesc.SwapEffect                         = DXGI_SWAP_EFFECT_FLIP_DISCARD;
     swapChainDesc.Flags                              = 0;
 
     ID3D11Device*        pDevice        = NULL;
@@ -39,12 +39,14 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
     deviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif // DEBUG
 
-    if (FAILED(D3D11CreateDeviceAndSwapChain(
-            NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, deviceFlags,
-            NULL, 0, D3D11_SDK_VERSION,
-            &swapChainDesc, &pSwapChain, &pDevice, &featureLevel, &pDeviceContext)))
+    HRESULT hr = FAILED(D3D11CreateDeviceAndSwapChain(
+        NULL, D3D_DRIVER_TYPE_HARDWARE, NULL, deviceFlags,
+        NULL, 0, D3D11_SDK_VERSION,
+        &swapChainDesc, &pSwapChain, &pDevice, &featureLevel, &pDeviceContext));
+
+    if (FAILED(hr) || !pDevice || !pDeviceContext || !pSwapChain)
     {
-        ASSERT_MSG(false, "Failed to create DirectX11 Device and SwapChain.");
+		ASSERT_MSG(false, "Failed to create DX11 Device and SwapChain.");
         return false;
     }
 
@@ -69,8 +71,14 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
         return false;
     }
 
+	D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
+	ZeroMemory(&rtvDesc, sizeof(D3D11_RENDER_TARGET_VIEW_DESC));
+	rtvDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
+	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	rtvDesc.Texture2D.MipSlice = 0;
+
     ID3D11RenderTargetView* pRenderTargetView = NULL;
-    HRESULT                 hr                = pDevice->lpVtbl->CreateRenderTargetView(pDevice, (ID3D11Resource*) pBackBuffer, NULL, &pRenderTargetView);
+    hr                                        = pDevice->lpVtbl->CreateRenderTargetView(pDevice, (ID3D11Resource*) pBackBuffer, &rtvDesc, &pRenderTargetView);
     pBackBuffer->lpVtbl->Release(pBackBuffer);
     if (FAILED(hr))
     {
@@ -172,10 +180,16 @@ void Graphics_DestroyGraphics(GfxHandle* pHandle)
         handle->pSwapChain->lpVtbl->Release(handle->pSwapChain);
         handle->pDevice->lpVtbl->Release(handle->pDevice);
 
-        FREE(handle);
+		handle->pDepthStencilView = NULL;
+		handle->pRenderTargetView = NULL;
+		handle->pDeviceContext = NULL;
+		handle->pSwapChain     = NULL;
+		handle->pDevice        = NULL;
 
-        *pHandle = NULL;
+        FREE(handle);
+		handle = NULL;
     }
+    *pHandle = NULL;
 }
 
 bool Graphics_SwapBuffers(GfxHandle handle)

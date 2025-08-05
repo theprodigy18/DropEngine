@@ -39,7 +39,6 @@ typedef struct _GfxHandle
 
     // Win32.
     HWND hwnd;
-    HDC  hdc;
 
     // Cache for clearing.
     VkClearColorValue clearColor;
