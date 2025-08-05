@@ -146,25 +146,25 @@ static bool s_isInitialized = false;
 static i32  s_gfxCount      = 0;
 #pragma endregion
 
-bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
+bool Graphics_CreateGraphics(DROP_GfxHandle* pHandle, const DROP_GfxInitProps* pProps)
 {
-	*pHandle = NULL;
+    *pHandle = NULL;
 
-	if (!s_isInitialized)
-	{
-        WndInitProps dummyProps;
-        dummyProps.title = "Dummy";
-        dummyProps.width = 1280;
-		dummyProps.height = 720;
-	
-		WndHandle dummyWndHandle = NULL;
-		if (!Platform_CreateWindow(&dummyWndHandle, &dummyProps))
-		{
-			ASSERT(false);
-			return false;
-		}
+    if (!s_isInitialized)
+    {
+        DROP_WndInitProps dummyProps;
+        dummyProps.title  = "Dummy";
+        dummyProps.width  = 1280;
+        dummyProps.height = 720;
 
-		PIXELFORMATDESCRIPTOR pfd;
+        DROP_WndHandle dummyWndHandle = NULL;
+        if (!Platform_CreateWindow(&dummyWndHandle, &dummyProps))
+        {
+            ASSERT(false);
+            return false;
+        }
+
+        PIXELFORMATDESCRIPTOR pfd;
         pfd.nSize        = sizeof(PIXELFORMATDESCRIPTOR);
         pfd.nVersion     = 1;
         pfd.dwFlags      = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
@@ -173,75 +173,75 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
         pfd.cDepthBits   = 24;
         pfd.cStencilBits = 8;
 
-		i32 pixelFormat = ChoosePixelFormat(dummyWndHandle->hdc, &pfd);
-		if (!pixelFormat)
-		{
-			ASSERT(false);
-			Platform_DestroyWindow(&dummyWndHandle);
-			return false;
-		}
-
-		if (!SetPixelFormat(dummyWndHandle->hdc, pixelFormat, &pfd))
-		{
-			ASSERT(false);
-            Platform_DestroyWindow(&dummyWndHandle);
-			return false;
-		}
-
-		HGLRC dummyContext = wglCreateContext(dummyWndHandle->hdc);
-		if (!dummyContext)
-		{
-			ASSERT(false);
-            Platform_DestroyWindow(&dummyWndHandle);
-			return false;
-		}
-
-		if (!wglMakeCurrent(dummyWndHandle->hdc, dummyContext))
+        i32 pixelFormat = ChoosePixelFormat(dummyWndHandle->hdc, &pfd);
+        if (!pixelFormat)
         {
             ASSERT(false);
-			wglDeleteContext(dummyContext);
             Platform_DestroyWindow(&dummyWndHandle);
             return false;
         }
 
-		LoadOpenGLFunctions();
+        if (!SetPixelFormat(dummyWndHandle->hdc, pixelFormat, &pfd))
+        {
+            ASSERT(false);
+            Platform_DestroyWindow(&dummyWndHandle);
+            return false;
+        }
 
-		LOAD_GL_FUNCTION(PFNWGLCREATECONTEXTATTRIBSARBPROC, wglCreateContextAttribsARB);
-		LOAD_GL_FUNCTION(PFNWGLCHOOSEPIXELFORMATARBPROC,    wglChoosePixelFormatARB);
-		LOAD_GL_FUNCTION(PFNWGLGETEXTENSIONSSTRINGARBPROC,  wglGetExtensionsStringARB);
-		if (!wglCreateContextAttribsARB || !wglChoosePixelFormatARB || !wglGetExtensionsStringARB)
-		{
-			ASSERT(false);
-			wglDeleteContext(dummyContext);
-			Platform_DestroyWindow(&dummyWndHandle);
-			return false;
-		}
+        HGLRC dummyContext = wglCreateContext(dummyWndHandle->hdc);
+        if (!dummyContext)
+        {
+            ASSERT(false);
+            Platform_DestroyWindow(&dummyWndHandle);
+            return false;
+        }
 
-		const char* wglExt = wglGetExtensionsStringARB(dummyWndHandle->hdc);
-		if (!wglExt || !strstr(wglExt, "WGL_ARB_framebuffer_sRGB"))
-		{
-			ASSERT_MSG(false, "WGL_ARB_framebuffer_sRGB is not supported.");
-			wglDeleteContext(dummyContext);
-			Platform_DestroyWindow(&dummyWndHandle);
-			return false;
-		}
+        if (!wglMakeCurrent(dummyWndHandle->hdc, dummyContext))
+        {
+            ASSERT(false);
+            wglDeleteContext(dummyContext);
+            Platform_DestroyWindow(&dummyWndHandle);
+            return false;
+        }
 
-		glDebugMessageCallback(GLDebugCallback, NULL);
-		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-		glEnable(GL_DEBUG_OUTPUT);
+        LoadOpenGLFunctions();
 
-		wglMakeCurrent(NULL, NULL);
-		wglDeleteContext(dummyContext);
+        LOAD_GL_FUNCTION(PFNWGLCREATECONTEXTATTRIBSARBPROC, wglCreateContextAttribsARB);
+        LOAD_GL_FUNCTION(PFNWGLCHOOSEPIXELFORMATARBPROC, wglChoosePixelFormatARB);
+        LOAD_GL_FUNCTION(PFNWGLGETEXTENSIONSSTRINGARBPROC, wglGetExtensionsStringARB);
+        if (!wglCreateContextAttribsARB || !wglChoosePixelFormatARB || !wglGetExtensionsStringARB)
+        {
+            ASSERT(false);
+            wglDeleteContext(dummyContext);
+            Platform_DestroyWindow(&dummyWndHandle);
+            return false;
+        }
 
-		Platform_DestroyWindow(&dummyWndHandle);
+        const char* wglExt = wglGetExtensionsStringARB(dummyWndHandle->hdc);
+        if (!wglExt || !strstr(wglExt, "WGL_ARB_framebuffer_sRGB"))
+        {
+            ASSERT_MSG(false, "WGL_ARB_framebuffer_sRGB is not supported.");
+            wglDeleteContext(dummyContext);
+            Platform_DestroyWindow(&dummyWndHandle);
+            return false;
+        }
 
-		s_isInitialized = true;
-	}
+        glDebugMessageCallback(GLDebugCallback, NULL);
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+        glEnable(GL_DEBUG_OUTPUT);
 
-	WndHandle wndHandle = pProps->wndHandle;
+        wglMakeCurrent(NULL, NULL);
+        wglDeleteContext(dummyContext);
+
+        Platform_DestroyWindow(&dummyWndHandle);
+
+        s_isInitialized = true;
+    }
+
+    DROP_WndHandle wndHandle = pProps->wndHandle;
     ASSERT_MSG(wndHandle, "Window handle is NULL.");
 
-	const i32 pixelAttribs[] = {
+    const i32 pixelAttribs[] = {
         WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
         WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
         WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
@@ -249,13 +249,13 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
         WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB,
         WGL_ACCELERATION_ARB, WGL_FULL_ACCELERATION_ARB,
         WGL_COLOR_BITS_ARB, 32,
-		WGL_RED_BITS_ARB, 8,
-		WGL_GREEN_BITS_ARB, 8,
-		WGL_BLUE_BITS_ARB, 8,
+        WGL_RED_BITS_ARB, 8,
+        WGL_GREEN_BITS_ARB, 8,
+        WGL_BLUE_BITS_ARB, 8,
         WGL_ALPHA_BITS_ARB, 8,
         WGL_DEPTH_BITS_ARB, 24,
-		WGL_STENCIL_BITS_ARB, 8,
-		WGL_FRAMEBUFFER_SRGB_CAPABLE_ARB, GL_TRUE,
+        WGL_STENCIL_BITS_ARB, 8,
+        WGL_FRAMEBUFFER_SRGB_CAPABLE_ARB, GL_TRUE,
         0}; // Last entry must be 0 to terminate the list.
 
     u32 numPixelFormats = 0;
@@ -266,7 +266,7 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
         return false;
     }
 
-	PIXELFORMATDESCRIPTOR pfd;
+    PIXELFORMATDESCRIPTOR pfd;
     if (!DescribePixelFormat(wndHandle->hdc, pixelformat, sizeof(PIXELFORMATDESCRIPTOR), &pfd))
     {
         ASSERT_MSG(false, "Failed to describe pixel format.");
@@ -279,7 +279,7 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
         return false;
     }
 
-	const i32 contextAttribs[] = {
+    const i32 contextAttribs[] = {
         WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
         WGL_CONTEXT_MINOR_VERSION_ARB, 3,
         WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
@@ -296,84 +296,84 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
     if (!wglMakeCurrent(wndHandle->hdc, context))
     {
         ASSERT_MSG(false, "Failed to make OpenGL context current.");
-		wglDeleteContext(context);
+        wglDeleteContext(context);
         return false;
     }
 
-
-	GfxHandle handle = ALLOC_SINGLE(_GfxHandle);
+    DROP_GfxHandle handle = ALLOC_SINGLE(_GfxHandle);
     ASSERT(handle);
     handle->hdc     = wndHandle->hdc;
     handle->context = context;
-    *pHandle = handle;
+    *pHandle        = handle;
 
     RECT rc;
     GetClientRect(wndHandle->hwnd, &rc);
 
     glViewport(0, 0, rc.right - rc.left, rc.bottom - rc.top);
-	glEnable(GL_FRAMEBUFFER_SRGB);
+    glEnable(GL_FRAMEBUFFER_SRGB);
 
-	++s_gfxCount;
+    ++s_gfxCount;
 
-	return true;
+    return true;
 }
 
-void Graphics_DestroyGraphics(GfxHandle* pHandle)
+void Graphics_DestroyGraphics(DROP_GfxHandle* pHandle)
 {
     ASSERT_MSG(pHandle && *pHandle, "Handle is NULL.");
-	GfxHandle handle = *pHandle;
+    DROP_GfxHandle handle = *pHandle;
 
-	if (handle)
-	{
-		wglMakeCurrent(NULL, NULL);
-		wglDeleteContext(handle->context);
+    if (handle)
+    {
+        wglMakeCurrent(NULL, NULL);
+        wglDeleteContext(handle->context);
 
-		handle->context = NULL;
-		handle->hdc     = NULL;
-		
-		FREE(handle);
-		handle = NULL;
+        handle->context = NULL;
+        handle->hdc     = NULL;
 
-		--s_gfxCount;
-	}
+        FREE(handle);
+        handle = NULL;
 
-	*pHandle = NULL;
+        --s_gfxCount;
+    }
 
-	if (s_gfxCount == 0)
-	{
-		FreeLibrary(g_openglDLL);
-		g_openglDLL = NULL;
-		s_isInitialized = false;
-	}
+    *pHandle = NULL;
+
+    if (s_gfxCount == 0)
+    {
+        FreeLibrary(g_openglDLL);
+        g_openglDLL     = NULL;
+        s_isInitialized = false;
+    }
 }
 
-bool Graphics_SwapBuffers(GfxHandle handle)
+bool Graphics_SwapBuffers(DROP_GfxHandle handle)
 {
-	return SwapBuffers(handle->hdc);
+    return SwapBuffers(handle->hdc);
 }
 
-bool Graphics_MakeCurrent(GfxHandle handle)
+bool Graphics_MakeCurrent(DROP_GfxHandle handle)
 {
-	return wglMakeCurrent(handle->hdc, handle->context);
+    return wglMakeCurrent(handle->hdc, handle->context);
 }
 
 void Graphics_ClearColor(f32 r, f32 g, f32 b, f32 a)
 {
-	glClearColor(r, g, b, a);
+    glClearColor(r, g, b, a);
 }
 
 void Graphics_ClearDepth(f32 depth)
 {
-	glClearDepth(depth);
+    glClearDepth(depth);
 }
 
-void Graphics_Clear(u32 flags)
+void Graphics_Clear(DROP_GFX_CLEAR flags)
 {
-    u32 clearFlags = 0;
-    if (flags & GFX_CLEAR_COLOR)
-		clearFlags |= GL_COLOR_BUFFER_BIT;
-	if (flags & GFX_CLEAR_DEPTH)
-		clearFlags |= GL_DEPTH_BUFFER_BIT;
+    u32 clearFlags = DROP_GFX_CLEAR_NONE;
 
-	glClear(clearFlags);
+    if (flags & DROP_GFX_CLEAR_COLOR)
+        clearFlags |= GL_COLOR_BUFFER_BIT;
+    if (flags & DROP_GFX_CLEAR_DEPTH)
+        clearFlags |= GL_DEPTH_BUFFER_BIT;
+
+    glClear(clearFlags);
 }

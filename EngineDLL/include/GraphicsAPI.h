@@ -4,18 +4,18 @@
 
 EXTERN_C_BEGIN
 
-DLL_API bool API_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps);
+DROP_API bool DROP_CreateGraphics(DROP_GfxHandle* pHandle, const DROP_GfxInitProps* pProps);
 
-DLL_API void API_DestroyGraphics(GfxHandle* pHandle);
+DROP_API void DROP_DestroyGraphics(DROP_GfxHandle* pHandle);
 
-DLL_API bool API_SwapBuffers(GfxHandle handle);
+DROP_API bool DROP_SwapBuffers(DROP_GfxHandle handle);
 
-DLL_API bool API_MakeCurrent(GfxHandle handle);
+DROP_API bool DROP_MakeCurrent(DROP_GfxHandle handle);
 
-DLL_API void API_ClearColor(f32 r, f32 g, f32 b, f32 a);
+DROP_API void DROP_ClearColor(f32 r, f32 g, f32 b, f32 a);
 
-DLL_API void API_ClearDepth(f32 depth);
+DROP_API void DROP_ClearDepth(f32 depth);
 
-DLL_API void API_Clear(u32 flags);
+DROP_API void DROP_Clear(DROP_GFX_CLEAR flags);
 
 EXTERN_C_END

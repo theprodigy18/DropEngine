@@ -8,33 +8,33 @@ int main()
 {
     LOG_TRACE("Hello World");
 
-    WndInitProps props;
+    DROP_WndInitProps props;
     props.title  = "DropTest";
     props.width  = 1280;
     props.height = 720;
 
-    WndHandle handle = NULL;
-    API_CreateWindow(&handle, &props);
+    DROP_WndHandle handle = NULL;
+    DROP_CreateWindow(&handle, &props);
 
-    GfxInitProps gfxProps;
+    DROP_GfxInitProps gfxProps;
     gfxProps.wndHandle = handle;
 
-    GfxHandle gfxHandle = NULL;
-    API_CreateGraphics(&gfxHandle, &gfxProps);
+    DROP_GfxHandle gfxHandle = NULL;
+    DROP_CreateGraphics(&gfxHandle, &gfxProps);
 
-    API_ShowWindow(handle);
+    DROP_ShowWindow(handle);
 
     bool running = true;
     while (running)
     {
-        running = API_PollEvents();
-        API_ClearColor(0.1f, 0.2f, 0.5f, 1.0f);
-        API_Clear(GFX_CLEAR_COLOR);
-        API_SwapBuffers(gfxHandle);
+        running = DROP_PollEvents();
+        DROP_ClearColor(0.1f, 0.2f, 0.5f, 1.0f);
+        DROP_Clear(DROP_GFX_CLEAR_COLOR);
+        DROP_SwapBuffers(gfxHandle);
     }
 
-    API_DestroyGraphics(&gfxHandle);
-    API_DestroyWindow(&handle);
+    DROP_DestroyGraphics(&gfxHandle);
+    DROP_DestroyWindow(&handle);
 
 #ifdef PLATFORM_WINDOWS
     _CrtDumpMemoryLeaks();

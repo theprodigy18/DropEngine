@@ -29,7 +29,7 @@ static HINSTANCE s_hInstance     = NULL;
 static i32       s_wndCount      = 0;
 #pragma endregion
 
-bool Platform_CreateWindow(WndHandle* pHandle, const WndInitProps* pProps)
+bool Platform_CreateWindow(DROP_WndHandle* pHandle, const DROP_WndInitProps* pProps)
 {
     *pHandle = NULL;
 
@@ -87,7 +87,7 @@ bool Platform_CreateWindow(WndHandle* pHandle, const WndInitProps* pProps)
         return false;
     }
 
-    WndHandle handle = ALLOC_SINGLE(_WndHandle);
+    DROP_WndHandle handle = ALLOC_SINGLE(_WndHandle);
     ASSERT(handle);
     handle->hwnd = hwnd;
     handle->hdc  = GetDC(hwnd);
@@ -98,21 +98,21 @@ bool Platform_CreateWindow(WndHandle* pHandle, const WndInitProps* pProps)
     return true;
 }
 
-void Platform_DestroyWindow(WndHandle* pHandle)
+void Platform_DestroyWindow(DROP_WndHandle* pHandle)
 {
     ASSERT_MSG(pHandle && *pHandle, "Handle is NULL.");
-    WndHandle handle = *pHandle;
+    DROP_WndHandle handle = *pHandle;
 
     if (handle)
     {
         ReleaseDC(handle->hwnd, handle->hdc);
         DestroyWindow(handle->hwnd);
 
-		handle->hwnd = NULL;
-		handle->hdc  = NULL;
+        handle->hwnd = NULL;
+        handle->hdc  = NULL;
 
         FREE(handle);
-		handle = NULL;
+        handle = NULL;
 
         --s_wndCount;
     }
@@ -122,7 +122,7 @@ void Platform_DestroyWindow(WndHandle* pHandle)
     if (s_wndCount == 0)
     {
         UnregisterClassW(L"DropEngine", s_hInstance);
-		s_hInstance = NULL;
+        s_hInstance     = NULL;
         s_isInitialized = false;
     }
 }
@@ -142,12 +142,12 @@ bool Platform_PollEvents()
     return true;
 }
 
-void Platform_ShowWindow(WndHandle handle)
+void Platform_ShowWindow(DROP_WndHandle handle)
 {
     ShowWindow(handle->hwnd, SW_SHOW);
 }
 
-void Platform_HideWindow(WndHandle handle)
+void Platform_HideWindow(DROP_WndHandle handle)
 {
     ShowWindow(handle->hwnd, SW_HIDE);
 }

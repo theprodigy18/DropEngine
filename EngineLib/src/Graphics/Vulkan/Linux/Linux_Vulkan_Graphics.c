@@ -13,11 +13,11 @@
 #pragma region INTERNAL
 PFN_vkCreateXlibSurfaceKHR pfn_vkCreateXlibSurfaceKHR = NULL;
 
-static bool      s_isInitialized = false;
-static GfxHandle s_currentHandle = NULL;
+static bool           s_isInitialized = false;
+static DROP_GfxHandle s_currentHandle = NULL;
 #pragma endregion
 
-bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
+bool Graphics_CreateGraphics(DROP_GfxHandle* pHandle, const DROP_GfxInitProps* pProps)
 {
     *pHandle = NULL;
 
@@ -625,7 +625,7 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
         return false;
     }
 
-    GfxHandle handle = ALLOC_SINGLE(_GfxHandle);
+    DROP_GfxHandle handle = ALLOC_SINGLE(_GfxHandle);
     ASSERT(handle);
     // Core.
     handle->instance       = instance;
@@ -665,7 +665,7 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
     handle->clearColor.float32[2] = 0.0f;
     handle->clearColor.float32[3] = 1.0f;
     handle->clearDepth            = 1.0f;
-    handle->clearFlags            = 0;
+    handle->clearFlags            = DROP_GFX_CLEAR_NONE;
     // Depth buffer.
     handle->depthImage       = depthImage;
     handle->depthImageMemory = depthImageMemory;
@@ -680,10 +680,10 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
     return true;
 }
 
-void Graphics_DestroyGraphics(GfxHandle* pHandle)
+void Graphics_DestroyGraphics(DROP_GfxHandle* pHandle)
 {
     ASSERT_MSG(pHandle && *pHandle, "Handle is NULL.");
-    GfxHandle handle = *pHandle;
+    DROP_GfxHandle handle = *pHandle;
 
     if (handle)
     {
@@ -746,7 +746,7 @@ void Graphics_DestroyGraphics(GfxHandle* pHandle)
     *pHandle = NULL;
 }
 
-bool Graphics_MakeCurrent(GfxHandle handle)
+bool Graphics_MakeCurrent(DROP_GfxHandle handle)
 {
     DEBUG_OP(if (!handle) return false);
 
@@ -769,13 +769,13 @@ void Graphics_ClearDepth(f32 depth)
     s_currentHandle->clearDepth = depth;
 }
 
-void Graphics_Clear(u32 flags)
+void Graphics_Clear(DROP_GFX_CLEAR flags)
 {
     ASSERT(s_currentHandle);
     s_currentHandle->clearFlags = flags;
 }
 
-bool Graphics_SwapBuffers(GfxHandle handle)
+bool Graphics_SwapBuffers(DROP_GfxHandle handle)
 {
     // 1. Wait for the previous frame to finish.
     vkWaitForFences(handle->device, 1, &handle->inFlightFence, VK_TRUE, UINT64_MAX);
@@ -799,7 +799,7 @@ bool Graphics_SwapBuffers(GfxHandle handle)
     vkBeginCommandBuffer(handle->commandBuffer, &beginInfo);
 
     // 4. Transition image layout.
-    if (handle->clearFlags & GFX_CLEAR_COLOR)
+    if (handle->clearFlags & DROP_GFX_CLEAR_COLOR)
     {
         VkImageMemoryBarrier barrier = {
             .sType               = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
@@ -870,7 +870,7 @@ bool Graphics_SwapBuffers(GfxHandle handle)
     }
 
     // 5. Handle depth clear operations
-    if (handle->clearFlags & GFX_CLEAR_DEPTH)
+    if (handle->clearFlags & DROP_GFX_CLEAR_DEPTH)
     {
         // Pastikan depth buffer tersedia
         if (handle->depthImage != VK_NULL_HANDLE)
@@ -952,7 +952,7 @@ bool Graphics_SwapBuffers(GfxHandle handle)
     }
 
     // Clear pending flags.
-    handle->clearFlags = 0;
+    handle->clearFlags = DROP_GFX_CLEAR_NONE;
 
     vkEndCommandBuffer(handle->commandBuffer);
 

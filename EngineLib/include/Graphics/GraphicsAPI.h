@@ -2,15 +2,19 @@
 
 #include "../Platform/WindowAPI.h"
 
-#define GFX_CLEAR_COLOR 0x0001
-#define GFX_CLEAR_DEPTH 0x0010
-
 EXTERN_C_BEGIN
 
-typedef struct _GfxHandle* GfxHandle;
+typedef enum DROP_GFX_CLEAR
+{
+    DROP_GFX_CLEAR_NONE  = 0,
+    DROP_GFX_CLEAR_COLOR = BIT(0),
+    DROP_GFX_CLEAR_DEPTH = BIT(1)
+} DROP_GFX_CLEAR;
+
+typedef struct _GfxHandle* DROP_GfxHandle;
 typedef struct _GfxInitProps
 {
-    WndHandle wndHandle;
-} GfxInitProps;
+    DROP_WndHandle wndHandle;
+} DROP_GfxInitProps;
 
 EXTERN_C_END

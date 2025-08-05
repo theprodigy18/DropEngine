@@ -31,6 +31,8 @@ typedef signed long long i64;
 typedef float  f32;
 typedef double f64;
 
+#define BIT(x) (1 << x)
+
 #define ALLOC_SINGLE(T) (T*) malloc(sizeof(T))
 #define ALLOC_ARRAY(T, count) (T*) malloc(count * sizeof(T))
 #define ZERO_MEM_SINGLE(ptr) memset(ptr, 0, sizeof(*ptr))

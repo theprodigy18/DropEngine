@@ -43,7 +43,7 @@ typedef struct _GfxHandle
     // Cache for clearing.
     VkClearColorValue clearColor;
     f32               clearDepth;
-    u32               clearFlags;
+    DROP_GFX_CLEAR    clearFlags;
 
     // Depth buffer.
     VkImage        depthImage;

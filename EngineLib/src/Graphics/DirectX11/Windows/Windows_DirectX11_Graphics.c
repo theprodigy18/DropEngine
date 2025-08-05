@@ -2,14 +2,14 @@
 #include "Graphics/DirectX11/Windows/Windows_DirectX11_Graphics.h"
 
 #pragma region INTERNAL
-static GfxHandle s_currentHandle = NULL;
+static DROP_GfxHandle s_currentHandle = NULL;
 #pragma endregion
 
-bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
+bool Graphics_CreateGraphics(DROP_GfxHandle* pHandle, const DROP_GfxInitProps* pProps)
 {
     *pHandle = NULL;
 
-    WndHandle wndHandle = pProps->wndHandle;
+    DROP_WndHandle wndHandle = pProps->wndHandle;
     ASSERT_MSG(wndHandle && wndHandle->hwnd, "Invalid window handle.");
 
     DXGI_SWAP_CHAIN_DESC swapChainDesc;
@@ -46,7 +46,7 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
 
     if (FAILED(hr) || !pDevice || !pDeviceContext || !pSwapChain)
     {
-		ASSERT_MSG(false, "Failed to create DX11 Device and SwapChain.");
+        ASSERT_MSG(false, "Failed to create DX11 Device and SwapChain.");
         return false;
     }
 
@@ -71,11 +71,11 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
         return false;
     }
 
-	D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
-	ZeroMemory(&rtvDesc, sizeof(D3D11_RENDER_TARGET_VIEW_DESC));
-	rtvDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
-	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-	rtvDesc.Texture2D.MipSlice = 0;
+    D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
+    ZeroMemory(&rtvDesc, sizeof(D3D11_RENDER_TARGET_VIEW_DESC));
+    rtvDesc.Format             = DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
+    rtvDesc.ViewDimension      = D3D11_RTV_DIMENSION_TEXTURE2D;
+    rtvDesc.Texture2D.MipSlice = 0;
 
     ID3D11RenderTargetView* pRenderTargetView = NULL;
     hr                                        = pDevice->lpVtbl->CreateRenderTargetView(pDevice, (ID3D11Resource*) pBackBuffer, &rtvDesc, &pRenderTargetView);
@@ -144,7 +144,7 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
 
     pDeviceContext->lpVtbl->RSSetViewports(pDeviceContext, 1, &viewport);
 
-    GfxHandle handle = ALLOC_SINGLE(_GfxHandle);
+    DROP_GfxHandle handle = ALLOC_SINGLE(_GfxHandle);
     ASSERT(handle);
     handle->pDeviceContext    = pDeviceContext;
     handle->pDevice           = pDevice;
@@ -164,10 +164,10 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
     return true;
 }
 
-void Graphics_DestroyGraphics(GfxHandle* pHandle)
+void Graphics_DestroyGraphics(DROP_GfxHandle* pHandle)
 {
     ASSERT_MSG(pHandle && *pHandle, "Invalid graphics handle.");
-    GfxHandle handle = *pHandle;
+    DROP_GfxHandle handle = *pHandle;
 
     if (handle)
     {
@@ -180,24 +180,24 @@ void Graphics_DestroyGraphics(GfxHandle* pHandle)
         handle->pSwapChain->lpVtbl->Release(handle->pSwapChain);
         handle->pDevice->lpVtbl->Release(handle->pDevice);
 
-		handle->pDepthStencilView = NULL;
-		handle->pRenderTargetView = NULL;
-		handle->pDeviceContext = NULL;
-		handle->pSwapChain     = NULL;
-		handle->pDevice        = NULL;
+        handle->pDepthStencilView = NULL;
+        handle->pRenderTargetView = NULL;
+        handle->pDeviceContext    = NULL;
+        handle->pSwapChain        = NULL;
+        handle->pDevice           = NULL;
 
         FREE(handle);
-		handle = NULL;
+        handle = NULL;
     }
     *pHandle = NULL;
 }
 
-bool Graphics_SwapBuffers(GfxHandle handle)
+bool Graphics_SwapBuffers(DROP_GfxHandle handle)
 {
     return SUCCEEDED(handle->pSwapChain->lpVtbl->Present(handle->pSwapChain, 1, 0));
 }
 
-bool Graphics_MakeCurrent(GfxHandle handle)
+bool Graphics_MakeCurrent(DROP_GfxHandle handle)
 {
     DEBUG_OP(if (!handle) return false);
     s_currentHandle = handle;
@@ -219,11 +219,11 @@ void Graphics_ClearDepth(f32 depth)
     s_currentHandle->clearDepth = depth;
 }
 
-void Graphics_Clear(u32 flags)
+void Graphics_Clear(DROP_GFX_CLEAR flags)
 {
     ASSERT(s_currentHandle);
 
-    if (flags & GFX_CLEAR_COLOR)
+    if (flags & DROP_GFX_CLEAR_COLOR)
     {
         s_currentHandle->pDeviceContext->lpVtbl->ClearRenderTargetView(
             s_currentHandle->pDeviceContext,
@@ -231,7 +231,7 @@ void Graphics_Clear(u32 flags)
             s_currentHandle->clearColor);
     }
 
-    if (flags & GFX_CLEAR_DEPTH)
+    if (flags & DROP_GFX_CLEAR_DEPTH)
     {
         s_currentHandle->pDeviceContext->lpVtbl->ClearDepthStencilView(
             s_currentHandle->pDeviceContext,

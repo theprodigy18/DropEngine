@@ -5,12 +5,12 @@
 #include "../../EngineLib/include/Graphics/GraphicsAPI.h"
 
 #ifdef PLATFORM_LINUX
-#define DLL_API
+#define DROP_API
 #elif defined(PLATFORM_WINDOWS)
 #ifdef DLL_EXPORTS
-#define DLL_API __declspec(dllexport)
+#define DROP_API __declspec(dllexport)
 #else
-#define DLL_API __declspec(dllimport)
+#define DROP_API __declspec(dllimport)
 #endif // DLL_EXPORTS
 #else
 #error "Platform not supported yet."

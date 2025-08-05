@@ -129,7 +129,7 @@ static EGLDisplay s_eglDisplay    = NULL;
 static i32        s_gfxCount      = 0;
 #pragma endregion
 
-bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
+bool Graphics_CreateGraphics(DROP_GfxHandle* pHandle, const DROP_GfxInitProps* pProps)
 {
     *pHandle = NULL;
 
@@ -155,12 +155,12 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
             return false;
         }
 
-        WndInitProps dummyProps;
+        DROP_WndInitProps dummyProps;
         dummyProps.title  = "Dummy";
         dummyProps.width  = 1280;
         dummyProps.height = 720;
 
-        WndHandle dummyWndHandle;
+        DROP_WndHandle dummyWndHandle;
 
         if (!Platform_CreateWindow(&dummyWndHandle, &dummyProps))
         {
@@ -244,7 +244,7 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
         s_isInitialized = true;
     }
 
-    WndHandle wndHandle = pProps->wndHandle;
+    DROP_WndHandle wndHandle = pProps->wndHandle;
 
     const EGLint configAttribs[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
@@ -299,7 +299,7 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
         return false;
     }
 
-    GfxHandle handle = ALLOC_SINGLE(_GfxHandle);
+    DROP_GfxHandle handle = ALLOC_SINGLE(_GfxHandle);
     ASSERT(handle);
     handle->surface = surface;
     handle->context = context;
@@ -315,10 +315,10 @@ bool Graphics_CreateGraphics(GfxHandle* pHandle, const GfxInitProps* pProps)
     return true;
 }
 
-void Graphics_DestroyGraphics(GfxHandle* pHandle)
+void Graphics_DestroyGraphics(DROP_GfxHandle* pHandle)
 {
     ASSERT_MSG(pHandle && *pHandle, "Handle is NULL.");
-    GfxHandle handle = *pHandle;
+    DROP_GfxHandle handle = *pHandle;
 
     if (handle)
     {
@@ -326,11 +326,11 @@ void Graphics_DestroyGraphics(GfxHandle* pHandle)
         eglDestroyContext(s_eglDisplay, handle->context);
         eglDestroySurface(s_eglDisplay, handle->surface);
 
-		handle->surface = NULL;
-		handle->context = NULL;
+        handle->surface = NULL;
+        handle->context = NULL;
 
         FREE(handle);
-		handle = NULL;
+        handle = NULL;
 
         --s_gfxCount;
     }
@@ -345,12 +345,12 @@ void Graphics_DestroyGraphics(GfxHandle* pHandle)
     }
 }
 
-bool Graphics_SwapBuffers(GfxHandle handle)
+bool Graphics_SwapBuffers(DROP_GfxHandle handle)
 {
     return eglSwapBuffers(s_eglDisplay, handle->surface);
 }
 
-bool Graphics_MakeCurrent(GfxHandle handle)
+bool Graphics_MakeCurrent(DROP_GfxHandle handle)
 {
     return eglMakeCurrent(s_eglDisplay, handle->surface, handle->surface, handle->context);
 }
@@ -365,12 +365,13 @@ void Graphics_ClearDepth(f32 depth)
     glClearDepth(depth);
 }
 
-void Graphics_Clear(u32 flags)
+void Graphics_Clear(DROP_GFX_CLEAR flags)
 {
-    u32 clearFlags = 0;
-    if (flags & GFX_CLEAR_COLOR)
+    u32 clearFlags = DROP_GFX_CLEAR_NONE;
+
+    if (flags & DROP_GFX_CLEAR_COLOR)
         clearFlags |= GL_COLOR_BUFFER_BIT;
-    if (flags & GFX_CLEAR_DEPTH)
+    if (flags & DROP_GFX_CLEAR_DEPTH)
         clearFlags |= GL_DEPTH_BUFFER_BIT;
 
     glClear(clearFlags);

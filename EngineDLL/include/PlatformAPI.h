@@ -4,14 +4,14 @@
 
 EXTERN_C_BEGIN
 
-DLL_API bool API_CreateWindow(WndHandle* pHandle, const WndInitProps* pProps);
+DROP_API bool DROP_CreateWindow(DROP_WndHandle* pHandle, const DROP_WndInitProps* pProps);
 
-DLL_API void API_DestroyWindow(WndHandle* pHandle);
+DROP_API void DROP_DestroyWindow(DROP_WndHandle* pHandle);
 
-DLL_API bool API_PollEvents();
+DROP_API bool DROP_PollEvents();
 
-DLL_API void API_ShowWindow(WndHandle handle);
+DROP_API void DROP_ShowWindow(DROP_WndHandle handle);
 
-DLL_API void API_HideWindow(WndHandle handle);
+DROP_API void DROP_HideWindow(DROP_WndHandle handle);
 
 EXTERN_C_END
